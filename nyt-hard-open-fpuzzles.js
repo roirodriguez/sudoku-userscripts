@@ -1,20 +1,32 @@
 // ==UserScript==
-// @name         NYT hard open
+// @name         NYT sudoku open
 // @namespace    http://tampermonkey.net/
 // @version      0.1
 // @description  Open NYT sudoku into f-puzzles, sudokuexchange, or CTC app
 // @author       Roi Rodriguez
-// @match        https://www.nytimes.com/puzzles/sudoku/hard
+// @match        https://www.nytimes.com/puzzles/sudoku/*
 // @icon         https://www.nytimes.com/games-assets/v2/metadata/nyt-favicon.ico?v=v2307131500
 // @require      https://f-puzzles.com/Compression.js?v=1.11.3
 // @require      https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js
 // @grant        GM_registerMenuCommand
+// @grant        GM_info
 // ==/UserScript==
 
 (function() {
     'use strict';
 
      const doShim = () => {
+         const difficulty_pathinfo = location.pathname.toLowerCase().substring(16);
+         let difficulty = 'unknown_difficulty';
+
+         if (difficulty_pathinfo.startsWith('hard')) {
+             difficulty = 'hard';
+         } else if (difficulty_pathinfo.startsWith('medium')) {
+             difficulty = 'medium';
+         } else if (difficulty_pathinfo.startsWith('easy')) {
+             difficulty = 'easy';
+         }
+
          const extractBoard = () => {
              let board = document.getElementsByClassName("su-board")[0];
              let sudokuStr = board
@@ -32,7 +44,7 @@
              const puzzle = {
                  "author": "NYT",
                  "ruleset": "Normal sudoku rules apply.",
-                 "title": "NYT hard " + moment().format('YYYY-MM-DD'),
+                 "title": "NYT " + difficulty + " " + moment().format('YYYY-MM-DD'),
                  "size": size,
                  "grid": []
              }
