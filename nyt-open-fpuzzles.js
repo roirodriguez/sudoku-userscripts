@@ -9,7 +9,7 @@
 // @require      https://f-puzzles.com/Compression.js?v=1.11.3
 // @require      https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js
 // @grant        GM_registerMenuCommand
-// @grant        GM_info
+// @grant        GM_setClipboard
 // ==/UserScript==
 
 (function () {
@@ -71,23 +71,30 @@
       return sudokuFpuzzlesEncodedJson;
     };
 
-    const openInSudokuExchange = GM_registerMenuCommand(
+    const exportSudokuStrCmdId = GM_registerMenuCommand(
+      "Copy sudoku as string to clipboard",
+      (e) => {
+        GM_setClipboard(extractBoard(), "text");
+      }
+    );
+    const openInSudokuExchangeCmdId = GM_registerMenuCommand(
       "Open in sudokuexchange",
       (e) => {
         let sudokuStr = extractBoard();
         window.open("https://sudokuexchange.com/play?s=" + sudokuStr, "_blank");
       }
     );
-
-    const openInFpuzzles = GM_registerMenuCommand("Open in f-puzzles", (e) => {
-      const sudokuFpuzzlesEncodedJson = createFpuzzlesStr();
-      window.open(
-        "https://f-puzzles.com/?load=" + sudokuFpuzzlesEncodedJson,
-        "_blank"
-      );
-    });
-
-    const openInCTCApp = GM_registerMenuCommand("Open in CTC app", (e) => {
+    const openInFpuzzlesCmdId = GM_registerMenuCommand(
+      "Open in f-puzzles",
+      (e) => {
+        const sudokuFpuzzlesEncodedJson = createFpuzzlesStr();
+        window.open(
+          "https://f-puzzles.com/?load=" + sudokuFpuzzlesEncodedJson,
+          "_blank"
+        );
+      }
+    );
+    const openInCTCAppCmdId = GM_registerMenuCommand("Open in CTC app", (e) => {
       const sudokuFpuzzlesEncodedJson = createFpuzzlesStr();
       window.open(
         "https://app.crackingthecryptic.com/sudoku/?puzzleid=fpuzzles" +

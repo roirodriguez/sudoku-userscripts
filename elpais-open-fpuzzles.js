@@ -4,8 +4,8 @@
 // @version      0.1
 // @description  Open NYT sudoku into f-puzzles, sudokuexchange, or CTC app
 // @author       Roi Rodriguez
-// @match        https://elpais.com/juegos/sudokus/*
 // @match        https://cdn-eu1.amuselabs.com/elpais/*
+// @match        https://elpais.com/juegos/sudokus/*
 // @icon         https://static.elpais.com/dist/resources/images/favicon.ico
 // @require      https://f-puzzles.com/Compression.js?v=1.11.3
 // @require      https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js
@@ -17,9 +17,10 @@
 (function () {
   "use strict";
 
+  let boxes = undefined;
+
   const getDifficulty = (loc) => {
     const difficulty_pathinfo = loc.pathname.toLowerCase().substring(16);
-    console.log(difficulty_pathinfo);
     if (difficulty_pathinfo.startsWith("dificil")) {
       return "hard";
     } else if (difficulty_pathinfo.startsWith("medio")) {
@@ -37,17 +38,13 @@
   };
 
   const doShim = () => {
-    let boxes = GM_getValue("boxes");
     let difficulty = GM_getValue("difficulty");
-
     const extractBoard = () => {
-      console.log(boxes.length);
       let sudokuStr =
         boxes && boxes.length == 81
           ? [...boxes]
               .map((box) => {
                 let digit = box.innerHTML;
-                console.log(digit);
                 if (digit > "0" && digit <= "9") return digit;
                 return "0";
               })
@@ -115,25 +112,17 @@
   const intervalId = setInterval(() => {
     // This is called for both matched domains. cdn from amuselabs contains the puzzle
     if (document.domain == "cdn-eu1.amuselabs.com") {
-      // Does tampermonkey run a copy on each matched domain? I think so, so to share variables i've got to use some API.
-      GM_setValue("boxes", getBoxes(document));
-      if (typeof boxes === undefined) {
+      boxes = getBoxes(document);
+      if (GM_getValue("difficulty" == null)) {
         return;
       }
-    } else if (document.domain == "elpais.com") {
+      clearInterval(intervalId);
+      doShim();
+    } else {
+      // El elpais.com only sets difficulty according to its pathinfo, the puzzle is
+      // contained in amuselabs. GM_setValue let me share difficulty with amuselabs iframe.
       GM_setValue("difficulty", getDifficulty(location));
       return;
     }
-
-    // doShim only if both boxes and difficulty set
-    if (GM_getValue("boxes", null) === null) {
-      return;
-    }
-    if (GM_getValue("difficulty", null) === null) {
-      return;
-    }
-
-    clearInterval(intervalId);
-    doShim();
-  }, 5000);
+  }, 100);
 })();
