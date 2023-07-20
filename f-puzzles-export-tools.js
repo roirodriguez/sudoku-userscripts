@@ -25,19 +25,33 @@
       return sudokuStr;
     };
 
-    const setSudokuGrid = (sudokuStr) => {
-        let i, j = 0;
-        unsafeWindow.grid.forEach((row) => {
-            row.forEach((cell) => {
-              newcell = cell(i, j);
-              newcell.value = parseInt(sudokuStr.charAt(9*i+j));
-              newcell.candidates = [cell.value];
-              newcell.isgiven = true;
-              ++j;
-            });
-            ++i;
-          });        
-        return;
+    const createFpuzzlesStr = (sudokuStr) => {
+      const size = 9;
+      const puzzle = {
+        author: "unknown",
+        ruleset: "Normal sudoku rules apply.",
+        title: "Classic Sudoku",
+        size: size,
+        grid: [],
+      };
+      for (var i = 0; i < size; i++) {
+        puzzle.grid.push([]);
+        for (var j = 0; j < size; j++) {
+          let digit = parseInt(sudokuStr.charAt(i * size + j));
+          puzzle.grid[i].push({
+            value: digit,
+            given: digit != 0,
+            cornerPencilMarks: [],
+            centerPencilMarks: [],
+            c: 0,
+            highlight: 0,
+          });
+        }
+      }
+      const sudokuFpuzzlesEncodedJson = compressor.compressToBase64(
+        JSON.stringify(puzzle)
+      );
+      return sudokuFpuzzlesEncodedJson;
     };
 
     const exportSudokuStrCmdId = GM_registerMenuCommand(
@@ -53,25 +67,45 @@
       }
     );
     const importSudokuFromStrCmdId = GM_registerMenuCommand(
+      "Import from puzzle string (user prompted)",
       (e) => {
-        let sudokuStr = prompt("Please paste a sudoku string");
-        setSudokuGrid(sudokuStr);
+        const sudokuStr = prompt("Please paste a sudoku string");
+        const sudokuFpuzzlesStr = createFpuzzlesStr(sudokuStr);
+        window.open(
+          "https://f-puzzles.com/?load=" + sudokuFpuzzlesStr,
+          "_self"
+        );
+      }
+    );
+    const importSudokuFromFpuzzlesStrCmdId = GM_registerMenuCommand(
+      "Import from f-puzzles' puzzle string (user prompted)",
+      (e) => {
+        const sudokuFpuzzlesStr = prompt(
+          "Please paste a sudoku string (f-puzzles format)"
+        );
+        window.open(
+          "https://f-puzzles.com/?load=" + sudokuFpuzzlesStr,
+          "_self"
+        );
       }
     );
     const openInSudokuExchangeCmdId = GM_registerMenuCommand(
-        "Open in sudokuexchange",
-        (e) => {
-          window.open("https://sudokuexchange.com/play?s=" + getSudokuStr(), "_blank");
-        }
-    );
-    const openInCTCAppCmdId = GM_registerMenuCommand("Open in CTC app", (e) => {
-        const sudokuFpuzzlesEncodedJson = exportPuzzle(false);
+      "Open in sudokuexchange",
+      (e) => {
         window.open(
-          "https://app.crackingthecryptic.com/sudoku/?puzzleid=fpuzzles" +
-            sudokuFpuzzlesEncodedJson,
+          "https://sudokuexchange.com/play?s=" + getSudokuStr(),
           "_blank"
         );
-      });       
+      }
+    );
+    const openInCTCAppCmdId = GM_registerMenuCommand("Open in CTC app", (e) => {
+      const sudokuFpuzzlesEncodedJson = exportPuzzle(false);
+      window.open(
+        "https://app.crackingthecryptic.com/sudoku/?puzzleid=fpuzzles" +
+          sudokuFpuzzlesEncodedJson,
+        "_blank"
+      );
+    });
   };
 
   const intervalId = setInterval(() => {
